@@ -1,8 +1,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Microcontrollers Laboratory                   ;;
 ;; Exercise 3: Counter and Display System        ;;
-;; Author: DJEUDJAM VERANE                       ;;
-;; UB Number: FE11A046              		     ;;
+;; Author: EYOG YVON LEONCE                      ;;
+;; UB Number: FE11A070              		     ;;
 ;; Date: 01/06/2015                              ;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;; This program uses a common cathode 7-segment display in PROTEUS
@@ -16,6 +16,8 @@ N1 equ 0Dh	;First counter for delay loop
 N2 equ 0Eh
 N3 equ 0Ch
 
+;Register Bit Label Equates
+Input   equ 01h   ;PUSH BUTTON INPUT RA1
 ORG 0x000
 
 ;;defining PORT B ad output
@@ -27,28 +29,32 @@ movwf TRISA
 bcf STATUS,5
 
 Start
-	btfsc PORTA, 01h	;get the value from RA1 if it is 0
-	call UpCount
-	xorlw	b'1101111'		;check for last entry
-	btfsc	STATUS, Z		;if true set Zero flag
-	call UpCount
+    clrf count
+    movf count,w
+	call Table
 
-	btfsc PORTA, 02h	;get the value from RA2 if it is 0
-	call DownCount
-	xorlw b'0111111'
-	btfsc STATUS, Z
-	call DownCount		
 
-	goto Start	
+goto check_a
+
+check_a    BTFSS PORTA,Input ; Wait for button push
+           GOTO check_a 
+call UpCount
+call Wait
+
+
+check_b    BTFSC PORTA,Input ; Wait for button release
+           GOTO check_b
+
+goto check_a
+		
 
 UpCount
 	movf count,w
 	call Table
 	movwf PORTB
-	call Wait
 	btfsc PORTA, 01h
 	incf count,f
-	retlw count
+	return
 
 DownCount
 	movf count,w
@@ -57,7 +63,7 @@ DownCount
 	call Wait
 	btfsc PORTA, 02h
 	decf count,f
-	retlw count
+	return
 
 Wait
 			;999990 cycles
@@ -67,33 +73,33 @@ Wait
 	movwf	N2
 	movlw	03h
 	movwf	N3
-	loop
-		decfsz	N1, f
-		goto	$+2
-		decfsz	N2, f
-		goto	$+2
-		decfsz	N3, f
-		goto	loop
-	
-		;6 cycles
-		goto	$+1
-		goto	$+1
-		goto	$+1
-		;4 cycles (including call)
-return
+loop
+	decfsz	N1, f
+	goto	$+2
+	decfsz	N2, f
+	goto	$+2
+	decfsz	N3, f
+	goto	loop
 
+			;6 cycles
+	goto	$+1
+	goto	$+1
+	goto	$+1
+
+			;4 cycles (including call)
+	return
 Table
 	addwf PCL,f		;PCL is prgram counter
-	retlw b'0111111'
-	retlw b'0000110'
-	retlw b'1011011'
-	retlw b'1001111'
-	retlw b'1100110'
-	retlw b'1101101'
-	retlw b'1111101'
-	retlw b'0000111'
-	retlw b'1111111'
-	retlw b'1101111'
+	RETLW 0x3f ; 0
+RETLW 0x06 ; 1
+RETLW 0x5b ; 2
+RETLW 0x4f ; 3
+RETLW 0x66 ; 4
+RETLW 0x6d ; 5
+RETLW 0x7d ; 6
+RETLW 0x07 ; 7
+RETLW 0x7f ; 8
+RETLW 0x6f ; 9
 
 END
 
