@@ -44,10 +44,10 @@ goto Start
 
 initial_check ;{
 btfsc PORTA, Input1 ; check if ra1 one is on {
-call button_one    
+goto button_one    
 ;}
 btfsc PORTA, Input2 ; else check if ra2 is on{
-call button_two
+goto button_two
 ;}
 goto initial_check;else wait for either push
 ;}
@@ -55,12 +55,6 @@ return
 
 ;logic to for RA1
 button_one
-;goto check_a ; Wait for button push
-
-;check_a    BTFSS PORTA,Input1 ; if (ra1== 0) {
-           ;GOTO check_a
-           ;}
-
 call UpCount; increment counter
 call Wait
 
@@ -69,14 +63,14 @@ call Wait
  ;          GOTO check_a
 
 ;goto check_a
-return
+goto initial_check
 
 ;logic for RA2
 button_two
 
 call DownCount; increment counter
 call Wait
-return
+goto initial_check
 
 ;logic to increment
 UpCount
@@ -89,12 +83,13 @@ UpCount
 
 ;logic to decrement
 DownCount
+    decf count,f
 	movf count,w
 	call Table
 	movwf PORTB
 	call Wait
-	btfsc PORTA, 02h
-	decf count,f
+	
+	
 	return
 
 Wait
