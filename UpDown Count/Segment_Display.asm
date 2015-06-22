@@ -87,7 +87,7 @@ DownCount
 	movf count,w
 	call Table
 	movwf PORTB
-	call Wait
+	
 	
 	
 	return
