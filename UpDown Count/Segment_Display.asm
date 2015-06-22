@@ -17,7 +17,8 @@ N2 equ 0Eh
 N3 equ 0Ch
 
 ;Register Bit Label Equates
-Input   equ 01h   ;PUSH BUTTON INPUT RA1
+Input1   equ 01h   ;PUSH BUTTON INPUT RA1
+Input2   equ 02h   ;PUSH BUTTON INPUT RA2
 ORG 0x000
 
 ;;defining PORT B ad output
@@ -28,26 +29,56 @@ movlw b'00110'	;setting PORTA pins RA1 and RA2 to input
 movwf TRISA
 bcf STATUS,5
 
-Start
-    clrf count
+
+    movlw b'0000000'  ;30h	;0
+    movwf count
     movf count,w
-	call Table
 
+Start
+call Table
 
-goto check_a
+call initial_check
 
-check_a    BTFSS PORTA,Input ; Wait for button push
-           GOTO check_a 
-call UpCount
+goto Start
+;}
+
+initial_check ;{
+btfsc PORTA, Input1 ; check if ra1 one is on {
+call button_one    
+;}
+btfsc PORTA, Input2 ; else check if ra2 is on{
+call button_two
+;}
+goto initial_check;else wait for either push
+;}
+return
+
+;logic to for RA1
+button_one
+;goto check_a ; Wait for button push
+
+;check_a    BTFSS PORTA,Input1 ; if (ra1== 0) {
+           ;GOTO check_a
+           ;}
+
+call UpCount; increment counter
 call Wait
 
 
-check_b    BTFSC PORTA,Input ; Wait for button release
-           GOTO check_b
+;check_b    BTFSS PORTA,Input2 ; Wait for button release
+ ;          GOTO check_a
 
-goto check_a
-		
+;goto check_a
+return
 
+;logic for RA2
+button_two
+
+call DownCount; increment counter
+call Wait
+return
+
+;logic to increment
 UpCount
 	movf count,w
 	call Table
@@ -56,6 +87,7 @@ UpCount
 	incf count,f
 	return
 
+;logic to decrement
 DownCount
 	movf count,w
 	call Table

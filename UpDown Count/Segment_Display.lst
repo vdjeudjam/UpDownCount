@@ -1,4 +1,4 @@
-MPASM  5.31               SEGMENT_DISPLAY.ASM   6-8-2015  14:10:06         PAGE  1
+MPASM  5.31               SEGMENT_DISPLAY.ASM   6-22-2015  11:44:24         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -26,127 +26,176 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
   0000000C            00017 N3 equ 0Ch
                       00018 
                       00019 ;Register Bit Label Equates
-  00000001            00020 Input   equ 01h   ;PUSH BUTTON INPUT RA1
+  00000001            00020 Input1   equ 01h   ;PUSH BUTTON INPUT RA1
+  00000002            00021 Input2   equ 02h   ;PUSH BUTTON INPUT RA2
 Warning[205]: Found directive in column 1. (ORG)
-0000                  00021 ORG 0x000
-                      00022 
-                      00023 ;;defining PORT B ad output
+0000                  00022 ORG 0x000
+                      00023 
+                      00024 ;;defining PORT B ad output
 Warning[203]: Found opcode in column 1. (bsf)
-0000   1683           00024 bsf STATUS,5
+0000   1683           00025 bsf STATUS,5
 Warning[203]: Found opcode in column 1. (movlw)
-0001   3000           00025 movlw  b'0000000'       ;setting PORTB pins to output
+0001   3000           00026 movlw  b'0000000'       ;setting PORTB pins to output
 Warning[203]: Found opcode in column 1. (movwf)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0002   0086           00026 movwf TRISB
+0002   0086           00027 movwf TRISB
 Warning[203]: Found opcode in column 1. (movlw)
-0003   3006           00027 movlw b'00110'  ;setting PORTA pins RA1 and RA2 to input
+0003   3006           00028 movlw b'00110'  ;setting PORTA pins RA1 and RA2 to input
 Warning[203]: Found opcode in column 1. (movwf)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0004   0085           00028 movwf TRISA
+0004   0085           00029 movwf TRISA
 Warning[203]: Found opcode in column 1. (bcf)
-0005   1283           00029 bcf STATUS,5
-                      00030 
-0006                  00031 Start
-0006   018B           00032     clrf count
-0007   080B           00033     movf count,w
-0008   202E           00034         call Table
-                      00035 
+0005   1283           00030 bcf STATUS,5
+                      00031 
+                      00032 
+0006   3000           00033     movlw b'0000000'  ;30h      ;0
+0007   008B           00034     movwf count
+0008   080B           00035     movf count,w
                       00036 
-Warning[203]: Found opcode in column 1. (goto)
-0009   280A           00037 goto check_a
-                      00038 
-000A   1C85           00039 check_a    BTFSS PORTA,Input ; Wait for button push
-000B   280A           00040            GOTO check_a 
-MPASM  5.31               SEGMENT_DISPLAY.ASM   6-8-2015  14:10:06         PAGE  2
+0009                  00037 Start
+Warning[203]: Found opcode in column 1. (call)
+0009   2035           00038 call Table
+                      00039 
+Warning[203]: Found opcode in column 1. (call)
+MPASM  5.31               SEGMENT_DISPLAY.ASM   6-22-2015  11:44:24         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-Warning[203]: Found opcode in column 1. (call)
-000C   2011           00041 call UpCount
-Warning[203]: Found opcode in column 1. (call)
-000D   201E           00042 call Wait
-                      00043 
+000A   200C           00040 call initial_check
+                      00041 
+Warning[203]: Found opcode in column 1. (goto)
+000B   2809           00042 goto Start
+                      00043 ;}
                       00044 
-000E   1885           00045 check_b    BTFSC PORTA,Input ; Wait for button release
-000F   280E           00046            GOTO check_b
-                      00047 
+000C                  00045 initial_check ;{
+Warning[203]: Found opcode in column 1. (btfsc)
+000C   1885           00046 btfsc PORTA, Input1 ; check if ra1 one is on {
+Warning[203]: Found opcode in column 1. (call)
+000D   2012           00047 call button_one    
+                      00048 ;}
+Warning[203]: Found opcode in column 1. (btfsc)
+000E   1905           00049 btfsc PORTA, Input2 ; else check if ra2 is on{
+Warning[203]: Found opcode in column 1. (call)
+000F   2015           00050 call button_two
+                      00051 ;}
 Warning[203]: Found opcode in column 1. (goto)
-0010   280A           00048 goto check_a
-                      00049                 
-                      00050 
-0011                  00051 UpCount
-0011   080B           00052         movf count,w
-0012   202E           00053         call Table
-0013   0086           00054         movwf PORTB
-0014   1885           00055         btfsc PORTA, 01h
-0015   0A8B           00056         incf count,f
-0016   0008           00057         return
-                      00058 
-0017                  00059 DownCount
-0017   080B           00060         movf count,w
-0018   202E           00061         call Table
-0019   0086           00062         movwf PORTB
-001A   201E           00063         call Wait
-001B   1905           00064         btfsc PORTA, 02h
-001C   038B           00065         decf count,f
-001D   0008           00066         return
+0010   280C           00052 goto initial_check;else wait for either push
+                      00053 ;}
+Warning[203]: Found opcode in column 1. (return)
+0011   0008           00054 return
+                      00055 
+                      00056 ;logic to for RA1
+0012                  00057 button_one
+                      00058 ;goto check_a ; Wait for button push
+                      00059 
+                      00060 ;check_a    BTFSS PORTA,Input1 ; if (ra1== 0) {
+                      00061            ;GOTO check_a
+                      00062            ;}
+                      00063 
+Warning[203]: Found opcode in column 1. (call)
+0012   2018           00064 call UpCount; increment counter
+Warning[203]: Found opcode in column 1. (call)
+0013   2025           00065 call Wait
+                      00066 
                       00067 
-001E                  00068 Wait
-                      00069                         ;999990 cycles
-001E   3007           00070         movlw   07h
-001F   008D           00071         movwf   N1
-0020   302F           00072         movlw   2Fh
-0021   008E           00073         movwf   N2
-0022   3003           00074         movlw   03h
-0023   008C           00075         movwf   N3
-0024                  00076 loop
-0024   0B8D           00077         decfsz  N1, f
-0025   2827           00078         goto    $+2
-0026   0B8E           00079         decfsz  N2, f
-0027   2829           00080         goto    $+2
-0028   0B8C           00081         decfsz  N3, f
-0029   2824           00082         goto    loop
-                      00083 
-                      00084                         ;6 cycles
-002A   282B           00085         goto    $+1
-002B   282C           00086         goto    $+1
-002C   282D           00087         goto    $+1
-                      00088 
-                      00089                         ;4 cycles (including call)
-002D   0008           00090         return
-MPASM  5.31               SEGMENT_DISPLAY.ASM   6-8-2015  14:10:06         PAGE  3
+                      00068 ;check_b    BTFSS PORTA,Input2 ; Wait for button release
+                      00069  ;          GOTO check_a
+                      00070 
+                      00071 ;goto check_a
+Warning[203]: Found opcode in column 1. (return)
+0014   0008           00072 return
+                      00073 
+                      00074 ;logic for RA2
+0015                  00075 button_two
+                      00076 
+Warning[203]: Found opcode in column 1. (call)
+0015   201E           00077 call DownCount; increment counter
+Warning[203]: Found opcode in column 1. (call)
+0016   2025           00078 call Wait
+Warning[203]: Found opcode in column 1. (return)
+0017   0008           00079 return
+MPASM  5.31               SEGMENT_DISPLAY.ASM   6-22-2015  11:44:24         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-002E                  00091 Table
-002E   0782           00092         addwf PCL,f             ;PCL is prgram counter
-002F   343F           00093         RETLW 0x3f ; 0
+                      00080 
+                      00081 ;logic to increment
+0018                  00082 UpCount
+0018   080B           00083         movf count,w
+0019   2035           00084         call Table
+001A   0086           00085         movwf PORTB
+001B   1885           00086         btfsc PORTA, 01h
+001C   0A8B           00087         incf count,f
+001D   0008           00088         return
+                      00089 
+                      00090 ;logic to decrement
+001E                  00091 DownCount
+001E   080B           00092         movf count,w
+001F   2035           00093         call Table
+0020   0086           00094         movwf PORTB
+0021   2025           00095         call Wait
+0022   1905           00096         btfsc PORTA, 02h
+0023   038B           00097         decf count,f
+0024   0008           00098         return
+                      00099 
+0025                  00100 Wait
+                      00101                         ;999990 cycles
+0025   3007           00102         movlw   07h
+0026   008D           00103         movwf   N1
+0027   302F           00104         movlw   2Fh
+0028   008E           00105         movwf   N2
+0029   3003           00106         movlw   03h
+002A   008C           00107         movwf   N3
+002B                  00108 loop
+002B   0B8D           00109         decfsz  N1, f
+002C   282E           00110         goto    $+2
+002D   0B8E           00111         decfsz  N2, f
+002E   2830           00112         goto    $+2
+002F   0B8C           00113         decfsz  N3, f
+0030   282B           00114         goto    loop
+                      00115 
+                      00116                         ;6 cycles
+0031   2832           00117         goto    $+1
+0032   2833           00118         goto    $+1
+0033   2834           00119         goto    $+1
+                      00120 
+                      00121                         ;4 cycles (including call)
+0034   0008           00122         return
+0035                  00123 Table
+0035   0782           00124         addwf PCL,f             ;PCL is prgram counter
+0036   343F           00125         RETLW 0x3f ; 0
 Warning[203]: Found opcode in column 1. (RETLW)
-0030   3406           00094 RETLW 0x06 ; 1
+0037   3406           00126 RETLW 0x06 ; 1
 Warning[203]: Found opcode in column 1. (RETLW)
-0031   345B           00095 RETLW 0x5b ; 2
+0038   345B           00127 RETLW 0x5b ; 2
 Warning[203]: Found opcode in column 1. (RETLW)
-0032   344F           00096 RETLW 0x4f ; 3
+0039   344F           00128 RETLW 0x4f ; 3
 Warning[203]: Found opcode in column 1. (RETLW)
-0033   3466           00097 RETLW 0x66 ; 4
+MPASM  5.31               SEGMENT_DISPLAY.ASM   6-22-2015  11:44:24         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+003A   3466           00129 RETLW 0x66 ; 4
 Warning[203]: Found opcode in column 1. (RETLW)
-0034   346D           00098 RETLW 0x6d ; 5
+003B   346D           00130 RETLW 0x6d ; 5
 Warning[203]: Found opcode in column 1. (RETLW)
-0035   347D           00099 RETLW 0x7d ; 6
+003C   347D           00131 RETLW 0x7d ; 6
 Warning[203]: Found opcode in column 1. (RETLW)
-0036   3407           00100 RETLW 0x07 ; 7
+003D   3407           00132 RETLW 0x07 ; 7
 Warning[203]: Found opcode in column 1. (RETLW)
-0037   347F           00101 RETLW 0x7f ; 8
+003E   347F           00133 RETLW 0x7f ; 8
 Warning[203]: Found opcode in column 1. (RETLW)
-0038   346F           00102 RETLW 0x6f ; 9
-                      00103 
+003F   346F           00134 RETLW 0x6f ; 9
+                      00135 
 Warning[205]: Found directive in column 1. (END)
-                      00104 END
-MPASM  5.31               SEGMENT_DISPLAY.ASM   6-8-2015  14:10:06         PAGE  4
+                      00136 END
+MPASM  5.31               SEGMENT_DISPLAY.ASM   6-22-2015  11:44:24         PAGE  5
 
 
 SYMBOL TABLE
@@ -154,7 +203,7 @@ SYMBOL TABLE
 
 C                                 00000000
 DC                                00000001
-DownCount                         00000017
+DownCount                         0000001E
 EEADR                             00000009
 EECON1                            00000088
 EECON2                            00000089
@@ -170,7 +219,8 @@ INTE                              00000004
 INTEDG                            00000006
 INTF                              00000001
 IRP                               00000007
-Input                             00000001
+Input1                            00000001
+Input2                            00000002
 N1                                0000000D
 N2                                0000000E
 N3                                0000000C
@@ -192,7 +242,7 @@ RD                                00000000
 RP0                               00000005
 RP1                               00000006
 STATUS                            00000003
-Start                             00000006
+Start                             00000009
 T0CS                              00000005
 T0IE                              00000005
 T0IF                              00000002
@@ -200,19 +250,19 @@ T0SE                              00000004
 TMR0                              00000001
 TRISA                             00000085
 TRISB                             00000086
-Table                             0000002E
-UpCount                           00000011
+Table                             00000035
+UpCount                           00000018
 W                                 00000000
 WR                                00000001
-WREN                              00000002
-MPASM  5.31               SEGMENT_DISPLAY.ASM   6-8-2015  14:10:06         PAGE  5
+MPASM  5.31               SEGMENT_DISPLAY.ASM   6-22-2015  11:44:24         PAGE  6
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+WREN                              00000002
 WRERR                             00000003
-Wait                              0000001E
+Wait                              00000025
 Z                                 00000002
 _CP_OFF                           00003FFF
 _CP_ON                            0000000F
@@ -226,25 +276,26 @@ _WDT_ON                           00003FFF
 _XT_OSC                           00003FFD
 __16F84A                          00000001
 __DEBUG                           1
-check_a                           0000000A
-check_b                           0000000E
+button_one                        00000012
+button_two                        00000015
 count                             0000000B
-loop                              00000024
+initial_check                     0000000C
+loop                              0000002B
 
 
 MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
 
-0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXX-------
+0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
 2000 : -------X-------- ---------------- ---------------- ----------------
 
 All other memory blocks unused.
 
-Program Memory Words Used:    57
-Program Memory Words Free:   967
+Program Memory Words Used:    64
+Program Memory Words Free:   960
 
 
 Errors   :     0
-Warnings :    21 reported,     0 suppressed
+Warnings :    32 reported,     0 suppressed
 Messages :     2 reported,     0 suppressed
 
 
